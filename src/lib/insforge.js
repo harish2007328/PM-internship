@@ -1,14 +1,9 @@
 import { createClient } from '@insforge/sdk';
 
-const baseUrl = import.meta.env.VITE_INSFORGE_URL;
-const anonKey = import.meta.env.VITE_INSFORGE_ANON_KEY;
-
-if (!baseUrl || !anonKey || baseUrl === 'undefined' || anonKey === 'undefined') {
-  console.error('❌ InsForge configuration missing or invalid in .env file.');
-  console.info('Ensure VITE_INSFORGE_URL and VITE_INSFORGE_ANON_KEY are set.');
-}
+const baseUrl = "https://74jktci8.us-east.insforge.app";
+const anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3OC0xMjM0LTU2NzgtOTBhYi1jZGVmMTIzNDU2NzgiLCJlbWFpbCI6ImFub25AaW5zZm9yZ2UuY29tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMDI4MDR9.X4tjuf0m-Oe1KRNKwuu_Wjng677XzohgwZLGMVVKzQM";
 
 export const insforge = createClient({
-  baseUrl: baseUrl || 'https://invalid-config.insforge.app',
-  anonKey: anonKey || 'missing-key'
+  baseUrl: baseUrl,
+  anonKey: anonKey
 });
