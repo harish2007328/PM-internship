@@ -197,7 +197,7 @@ export default function App() {
   };
 
   const nextStep = () => {
-    if (step < 4) setStep(step + 1);
+    if (step < 5) setStep(step + 1);
     else handleSubmit();
   };
 
@@ -210,12 +210,12 @@ export default function App() {
     try {
       const { data, error } = await insforge.database
         .from('pm_applications')
-        .insert({
+        .insert([{
           full_name: formData.personal.fullName,
           email: formData.contact.email,
           phone: formData.contact.primaryMobile,
           registration_data: formData
-        });
+        }]);
 
       if (error) {
         throw error;
