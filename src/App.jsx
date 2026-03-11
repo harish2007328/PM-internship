@@ -207,21 +207,24 @@ export default function App() {
 
   const handleSubmit = async () => {
     setLoading(true);
-    console.log('Submitting data:', {
+    const payloadData = {
       full_name: formData.personal.fullName,
       email: formData.contact.email,
       phone: formData.contact.primaryMobile,
+      caste: formData.personal.category,
+      location: formData.personal.district,
+      education: formData.education.length > 0 ? formData.education[0].course : '',
+      major: formData.education.length > 0 ? formData.education[0].stream : '',
+      skills: formData.skills.join(', '),
+      family_income: parseFloat(formData.personal.annualIncome) || 0,
       registration_data: formData
-    });
+    };
+
+    console.log('Submitting data:', payloadData);
     try {
       const { data, error } = await insforge.database
         .from('pm_applications')
-        .insert([{
-          full_name: formData.personal.fullName,
-          email: formData.contact.email,
-          phone: formData.contact.primaryMobile,
-          registration_data: formData
-        }]);
+        .insert([payloadData]);
 
       if (error) {
         throw error;
