@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@400;500;600;700&display=swap');
+
+@theme {
+  --color-primary: #1C2340;
+  --color-accent: #E05C2A;
+  --color-accent-dark: #C44F24;
+  --color-background: #F5F4F2;
+  --color-surface: #FFFFFF;
+  --color-text-primary: #1A1A1A;
+  --color-text-secondary: #6B7280;
+  --color-border: #E2E0DC;
+
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --font-heading: 'Sora', sans-serif;
+
+  --radius-card: 12px;
+  --radius-input: 8px;
+
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+@layer base {
+  body {
+    @apply font-body bg-background text-text-primary antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-semibold;
+  }
+
+  input, select, textarea {
+    @apply font-body;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-accent hover:bg-accent-dark text-white px-6 py-2.5 rounded-input transition-all duration-200 active:translate-y-[1px] font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-outline {
+    @apply border border-border hover:bg-white/50 text-text-primary px-4 py-2 rounded-input transition-all duration-200 active:translate-y-[1px] font-medium;
+  }
+
+  .btn-ghost {
+    @apply text-text-secondary hover:text-text-primary px-4 py-2 transition-all duration-200 font-medium;
+  }
+
+  .input-field {
+    @apply w-full h-11 px-4 border border-border rounded-input focus:outline-none focus:border-primary transition-colors bg-white;
+  }
+
+  .label-text {
+    @apply block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5;
+  }
+
+  .card {
+    @apply bg-surface border border-border rounded-card shadow-card;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 bg-primary text-white text-sm rounded-full;
+  }
+}
