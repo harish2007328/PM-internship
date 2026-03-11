@@ -207,16 +207,31 @@ export default function App() {
 
   const handleSubmit = async () => {
     setLoading(true);
+
+    const name = formData.personal.fullName || "";
+    const email = formData.contact.email || "";
+    const caste = formData.personal.category || "";
+    const location = formData.personal.district || "";
+    const education = formData.education.length > 0 ? formData.education[0].course : "";
+    const major = formData.education.length > 0 ? formData.education[0].stream : "";
+    const skills = formData.skills.join(', ');
+    const family_income = parseFloat(formData.personal.annualIncome) || 0;
+
+    // Generate CSV string: user_id,name,email,caste,location,education,major,skills,family_income
+    // Using PENDING for user_id because the real ID is auto-generated during DB insert
+    const csv_data = `PENDING,${name},${email},${caste},${location},${education},${major},"${skills}",${family_income}`;
+
     const payloadData = {
-      full_name: formData.personal.fullName,
-      email: formData.contact.email,
+      full_name: name,
+      email: email,
       phone: formData.contact.primaryMobile,
-      caste: formData.personal.category,
-      location: formData.personal.district,
-      education: formData.education.length > 0 ? formData.education[0].course : '',
-      major: formData.education.length > 0 ? formData.education[0].stream : '',
-      skills: formData.skills.join(', '),
-      family_income: parseFloat(formData.personal.annualIncome) || 0,
+      caste: caste,
+      location: location,
+      education: education,
+      major: major,
+      skills: skills,
+      family_income: family_income,
+      csv_data: csv_data,
       registration_data: formData
     };
 
