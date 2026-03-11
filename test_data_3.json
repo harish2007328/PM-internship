@@ -1,0 +1,29 @@
+[
+  {
+    "full_name": "Full Test",
+    "email": "full@test.com",
+    "phone": "9876543210",
+    "registration_data": {
+      "personal": {
+        "fullName": "Full Test",
+        "dobDay": "1", "dobMonth": "1", "dobYear": "1990",
+        "gender": "Male",
+        "category": "OC",
+        "parentGuardianName": "Parent",
+        "address1": "123 Street",
+        "state": "Karnataka",
+        "district": "Bengaluru",
+        "pinCode": "560001",
+        "annualIncome": "5"
+      },
+      "contact": {
+        "primaryMobile": "9876543210",
+        "email": "full@test.com"
+      },
+      "education": [],
+      "skills": ["React"],
+      "languages": ["English"],
+      "experience": []
+    }
+  }
+]

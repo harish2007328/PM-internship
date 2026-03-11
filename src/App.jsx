@@ -207,6 +207,12 @@ export default function App() {
 
   const handleSubmit = async () => {
     setLoading(true);
+    console.log('Submitting data:', {
+      full_name: formData.personal.fullName,
+      email: formData.contact.email,
+      phone: formData.contact.primaryMobile,
+      registration_data: formData
+    });
     try {
       const { data, error } = await insforge.database
         .from('pm_applications')
@@ -224,7 +230,7 @@ export default function App() {
       setComplete(true);
     } catch (error) {
       console.error('Submission failed:', error);
-      alert('Application submission failed. Please try again.');
+      alert(`Application submission failed: ${error.message || JSON.stringify(error)}`);
     } finally {
       setLoading(false);
     }
