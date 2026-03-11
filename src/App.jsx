@@ -210,7 +210,7 @@ export default function App() {
 
     const name = formData.personal.fullName || "";
     const email = formData.contact.email || "";
-    const caste = formData.personal.category || "";
+    const caste = (formData.personal.category || "").split('(')[0].trim();
     const location = formData.personal.district || "";
     const education = formData.education.length > 0 ? formData.education[0].course : "";
     const major = formData.education.length > 0 ? formData.education[0].stream : "";
