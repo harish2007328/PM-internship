@@ -1,0 +1,10 @@
+cd C:\Users\Admin\OneDrive\Desktop\pm-internship\backend
+.\venv\Scripts\activate
+python main.py
+
+cd C:\Users\Admin\OneDrive\Desktop\pm-internship\frontend
+npm run dev -- --port 5178
+
+
+# This finds whatever is on port 8000 and kills it
+Stop-Process -Id (Get-NetTCPConnection -LocalPort 8000).OwningProcess -Force

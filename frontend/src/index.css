@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@400;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1C2340;
+  --color-accent: #E05C2A;
+  --color-accent-hover: #C44F24;
+  --color-off-white: #F5F4F2;
+  --color-surface: #FFFFFF;
+  --color-border: #E2E0DC;
+  --color-text-primary: #1A1A1A;
+  --color-text-secondary: #6B7280;
+  --color-success: #10B981;
+
+  --font-body: "Plus Jakarta Sans", sans-serif;
+  --font-heading: "Sora", sans-serif;
+
+  --radius-input: 8px;
+  --radius-card: 12px;
+}
+
+@layer base {
+  body {
+    @apply bg-off-white text-text-primary font-body antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-semibold text-primary;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-accent text-white px-6 py-2.5 rounded-input font-semibold 
+           transition-all duration-200 hover:bg-accent-hover hover:-translate-y-0.5 
+           active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .btn-secondary {
+    @apply bg-transparent text-text-secondary px-4 py-2 rounded-input font-medium
+           transition-all duration-200 hover:text-primary;
+  }
+  
+  .input-label {
+    @apply block text-[11px] font-bold uppercase tracking-wide text-text-secondary mb-1.5;
+  }
+  
+  .form-input {
+    @apply w-full h-11 px-4 bg-white border border-border rounded-input 
+           focus:outline-none focus:border-primary transition-colors duration-200;
+  }
+  
+  .card {
+    @apply bg-white border border-border rounded-card p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)];
+  }
+
+  .markdown-content p {
+    @apply mb-3 last:mb-0;
+  }
+  .markdown-content ul, .markdown-content ol {
+    @apply mb-4 ml-4 list-disc space-y-1;
+  }
+  .markdown-content strong {
+    @apply font-black;
+  }
+
+  .markdown-content-mini p {
+    @apply m-0 p-0 inline;
+  }
+}
