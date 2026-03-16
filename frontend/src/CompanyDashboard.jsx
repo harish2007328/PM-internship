@@ -72,18 +72,43 @@ const CompanyDashboard = ({ preSelectedJobId }) => {
   const fetchApplicants = async (jobId) => {
     const idToUse = jobId || currentJobId;
     if (!idToUse) return;
-    const selectedJob = jobs.find(j => j.job_id === idToUse);
+    let selectedJob = jobs.find(j => j.job_id === idToUse);
+    
     setIsLoading(true);
     try {
-      const { data: apps } = await insforge.database.from('pm_applications').select('user_id, pm_users (*)').eq('job_id', idToUse);
+      // If job not in state (e.g. direct load from demo), fetch it
+      if (!selectedJob) {
+        const { data: jobData } = await insforge.database.from('pm_jobs').select('*').eq('job_id', idToUse).single();
+        if (jobData) selectedJob = jobData;
+      }
+
+      const { data: apps } = await insforge.database.from('pm_applications').select('user_id').eq('job_id', idToUse);
+      if (!apps || apps.length === 0) {
+        setShortlisted([]);
+        return;
+      }
+
+      const applicantIds = apps.map(a => a.user_id);
+      const { data: usersData } = await insforge.database.from('pm_users').select('*').in('user_id', applicantIds);
+      
       const { data: selections } = await insforge.database.from('pm_selections').select('user_id').eq('job_id', idToUse);
       const selectedSet = new Set(selections?.map(s => s.user_id) || []);
-      if (Array.isArray(apps)) {
-        const processed = apps.map(app => {
-          const user = app.pm_users;
-          const score = calculateMatchScore(user.skills, selectedJob?.required_skills || '');
-          return { ...user, id: user.user_id, score: Math.round(score * 100), is_selected: selectedSet.has(user.user_id), skills: user.skills ? user.skills.split(',').map(s => s.trim()) : [] };
+      
+      if (Array.isArray(usersData)) {
+        const processed = usersData.map(user => {
+          const uSkills = user.skills || '';
+          const jSkills = selectedJob?.required_skills || '';
+          const score = calculateMatchScore(uSkills, jSkills);
+          
+          return { 
+            ...user, 
+            id: user.user_id, 
+            score: Math.round(score * 100), 
+            is_selected: selectedSet.has(user.user_id),
+            skills: user.skills ? user.skills.split(',').map(s => s.trim()) : [] 
+          };
         }).sort((a, b) => b.score - a.score);
+        
         setShortlisted(processed);
       }
     } catch (err) { console.error(err); }
