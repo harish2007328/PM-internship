@@ -1,0 +1,51 @@
+job_id,company,role,sector,required_skills,location,stipend
+49bd255a-b5bf-488a-a2b8-a5e17225c318,THE ASSOCIATED BUILDING COMPANY LIMITED,Data Science Intern,Core,"Figma, Tailwind, Java, AutoCAD, PLC",Nagpur,14398
+2abff1e9-98af-4265-a2cf-1e6d97569fa6,POWER FINANCE CORPORATION LIMITED,SDE Intern,Finance,"SQL, Python, Project Management, Excel",Surat,21185
+942c6f96-6312-48d6-85f7-9cbf743c7feb,RIYA TRAVEL AND TOURS (INDIA) PRIVATE LIMITED,Frontend Dev,HealthTech,"Machine Learning, React, Market Research",Mumbai,12815
+712227eb-7bea-44ad-a4bb-5b6b3507295f,WEST BENGALSTATE ELECTRICITY TRANSMISSION COMPANY LIMITED,Marketing Intern,Core,"Market Research, Mechanical Design, Java, Tailwind",Mumbai,24205
+7da24a0e-8e21-471d-b57c-ec0de532c830,TRIDENT LIMITED,SDE Intern,E-commerce,"Java, Figma, Tailwind, UI/UX",Chennai,36844
+a3874fd8-c9c3-4a0d-989f-0641600a9149,ZYDUS LIFESCIENCES LIMITED,Marketing Intern,E-commerce,"Docker, React, Mechanical Design, C++",Jaipur,38574
+ad76a2c2-d23f-435f-a5cc-e3544dfa9c6a,HCL TECHNOLOGIES LIMITED,Backend Dev,HealthTech,"Excel, React, Tailwind, AWS, Java",Pune,23287
+835253b5-5ef9-4b80-bce1-367750513dd3,GMR HYDERABAD INTERNATIONAL AIRPORT LIMITED,Frontend Dev,E-commerce,"Python, React, Project Management, SQL, C++",Kolkata,32828
+b1f22ef1-5aa5-47a3-9641-20f12723f8da,BHUSHAN POWER & STEEL LIMITED,SDE Intern,E-commerce,"AutoCAD, Excel, PLC, Mechanical Design",Mumbai,42911
+4500fde5-a223-4af5-b550-9e32d8572537,POLYPLEX CORPORATION LIMITED,Backend Dev,Core,"Node.js, Excel, Tailwind, Machine Learning",Hyderabad,33486
+dfcdba5e-d0be-4711-8a6b-a7f9843545c5,ASIAN FAB TEC LIMITED,Data Science Intern,Core,"Tailwind, Excel, Mechanical Design",Lucknow,24849
+add7f9aa-793c-4cd0-a205-057169332df7,THE DHAMRA PORT COMPANY LIMITED,Frontend Dev,HealthTech,"Mechanical Design, Excel, Communication",Kanpur,28799
+2808ae8c-9f1c-45fd-89d5-4ce37dcfb24e,TATA MOTORS LIMITED,Marketing Intern,Finance,"C++, Docker, PLC",Jaipur,10268
+575f1d34-44ea-4f68-a54d-96b19acd114c,GODAWARI POWER AND ISPAT LIMITED,Backend Dev,IT,"Python, Node.js, Kubernetes",Surat,11284
+5e239b37-e48c-4b04-a3c5-512ccc646c43,FIVE-STAR BUSINESS FINANCE LIMITED,UI/UX Intern,E-commerce,"Figma, Communication, Machine Learning, Market Research",Kolkata,36609
+3ead9670-451a-42a0-8276-3a0eec990d69,MANAPPURAM FINANCE LIMITED,PM Intern,E-commerce,"AutoCAD, Kubernetes, Docker",Delhi,16875
+33592031-1736-4e65-973e-c73408ab8575,VARSITY EDUCATION MANAGEMENT PRIVATE LIMITED,Backend Dev,IT,"Node.js, C++, React, Docker",Indore,32778
+852c5894-2a4a-46b8-9039-0d915f459f21,TAFE MOTORS AND TRACTORS LIMITED,UI/UX Intern,IT,"Docker, Java, Python, Kubernetes, Tailwind",Thane,15808
+95535927-f03d-409b-bb24-8418ea3387c7,STAR INDIA PRIVATE LIMITED,Data Science Intern,IT,"Machine Learning, Java, Excel, PLC, Python",Lucknow,22978
+d0c52f66-debc-444f-9b88-ed7b20a80284,DLF CYBER CITY DEVELOPERS LIMITED,Backend Dev,HealthTech,"Market Research, Tailwind, Node.js, Kubernetes, AutoCAD",Surat,11685
+799d27b1-a397-41ca-a379-4ea716c43d23,DILIP BUILDCON LIMITED,Frontend Dev,Finance,"PLC, Excel, Tailwind, React, Node.js",Kolkata,34074
+d458faec-377f-49a3-bba1-fecf27da0146,JSW SPORTS PRIVATE LIMITED,UI/UX Intern,Core,"Kubernetes, Machine Learning, Mechanical Design",Kolkata,20570
+867c3b01-89b6-46ba-bebf-5149bd30cd6a,TATA CAPITAL FINANCIAL SERVICES LIMITED,Marketing Intern,E-commerce,"C++, AWS, Communication, Kubernetes, Excel",Jaipur,19055
+0e08f938-18d4-4d79-a1ed-c367b192f80a,MAHARASHTRA EASTERN GRID POWER TRANSMISSION COMPANY LIMITED,SDE Intern,IT,"UI/UX, Project Management, C++, Docker, Node.js",Mumbai,10149
+13a51009-a0c6-4bbd-8043-7e9932c09c47,ARCELORMITTAL NIPPON STEEL INDIA LIMITED,Data Science Intern,IT,"C++, Kubernetes, React, Docker, SQL",Jaipur,37524
+118366b2-be60-4bda-98e6-1b56fa68a009,YASHODA HEALTHCARE SERVICES PRIVATE LIMITED,PM Intern,IT,"Node.js, Mechanical Design, Docker, AWS, Communication",Kanpur,14093
+91a23d82-0661-4ab7-a010-1ee6bc77491b,RAIL VIKAS NIGAM LIMITED,Marketing Intern,Finance,"Machine Learning, Figma, Excel, Project Management",Delhi,34707
+58ba19e2-8931-4f92-b0c1-30f528a1e4f3,RELIANCE JIO INFOCOMM LIMITED,Frontend Dev,HealthTech,"Communication, Java, Mechanical Design, C++, Market Research",Chennai,20695
+bf3f1063-fb0d-4a8a-b61c-911ca6720da3,DEEPAK NITRITE LIMITED,Frontend Dev,HealthTech,"Kubernetes, Java, Python, SQL",Delhi,12217
+47c3351b-d3ff-41ba-bd0f-1e1ea1f649b5,PETRONET LNG LIMITED,Backend Dev,Finance,"Market Research, Java, UI/UX",Pune,22323
+d58bc4e5-d205-4018-bfd8-5a265aa370f6,TRIBHOVANDAS BHIMJI ZAVERI LIMITED,Data Science Intern,Finance,"Java, Python, Tailwind, AutoCAD",Chennai,43179
+d0cdc93c-cd15-405e-903f-ee397c46d8bd,SHREE CEMENT LIMITED,PM Intern,HealthTech,"Market Research, SQL, Mechanical Design, Node.js",Thane,24883
+2ecc02b8-5414-421f-adb0-1fcf4b38ca4b,HINDUSTAN ZINC LIMITED,SDE Intern,HealthTech,"Python, Mechanical Design, Figma, Machine Learning, React",Jaipur,34711
+f81b2ef7-7187-415e-9910-5be78c350d00,MACROTECH DEVELOPERS LIMITED,SDE Intern,HealthTech,"Communication, Excel, Python, Market Research, Docker",Tenkasi,17520
+46969a91-aa63-4f09-a8d7-468e8cc134f2,MAHANADI COALFIELDS LIMITED,UI/UX Intern,E-commerce,"Figma, AutoCAD, AWS, Market Research",Mumbai,33661
+cdc927ba-98ab-45db-8191-c38a81723ca9,REC LIMITED,UI/UX Intern,Core,"Market Research, UI/UX, Python, Docker, Figma",Chennai,10649
+efbca4b2-6408-42d2-9ea2-0dfdacd97826,UTKAL ALUMINA INTERNATIONAL LIMITED.,Data Science Intern,HealthTech,"Communication, Machine Learning, Project Management, Docker, Kubernetes",Kanpur,33621
+ff58c19b-33a1-4873-ae59-575ddba557b4,NTPC LIMITED,PM Intern,Finance,"Python, Docker, Market Research, C++, Excel",Indore,33769
+2b397f24-4589-40b2-9837-caaae0a121d0,OIL AND NATURAL GAS CORPORATION LIMITED,Backend Dev,Core,"C++, Machine Learning, Docker",Pune,32186
+f092cee7-3844-4024-a552-5833dc28933f,WIPRO LIMITED,Frontend Dev,E-commerce,"SQL, UI/UX, Communication, Excel",Ahmedabad,35794
+29b7c80a-376c-4d2f-a209-cfc0e3f9e778,TATA STEEL LIMITED,SDE Intern,Core,"React, SQL, Java, AWS",Delhi,32691
+b3f4a854-8056-4311-b9ff-0cceb9d2a648,GAWAR CONSTRUCTION LIMITED.,Marketing Intern,Core,"Docker, Tailwind, PLC, Project Management",Hyderabad,33148
+cd472d23-ce55-4bb4-b3f8-cb9e7eefac9f,INFOSYS BPM LIMITED,Backend Dev,Finance,"Node.js, C++, Docker, Kubernetes, Excel",Surat,25582
+3cb645d5-ebdb-43ed-b601-3f175bb128c3,JSW ENERGY LIMITED,Data Science Intern,Core,"UI/UX, Machine Learning, Docker, Kubernetes",Ahmedabad,26224
+82fb5804-5d41-40ad-9985-96e00a5b5680,BALKRISHNA INDUSTRIES LIMITED,UI/UX Intern,HealthTech,"Kubernetes, Python, AutoCAD",Ahmedabad,43849
+d77fe515-df24-49da-b5b1-1c5222511038,EDELWEISS ASSET RECONSTRUCTION COMPANY LIMITED,Marketing Intern,E-commerce,"Kubernetes, Docker, C++, Project Management, Java",Mumbai,39997
+34185744-a6a4-4454-93fd-6218f35fcc28,HALDIRAM FOODS INTERNATIONAL PRIVATE LIMITED,Backend Dev,E-commerce,"Java, AutoCAD, SQL",Thane,31893
+bf5b1d66-20d5-4af2-bbee-b4f403d09e99,GUJARAT FLUOROCHEMICALS LIMITED,Marketing Intern,IT,"UI/UX, React, Machine Learning, AWS",Lucknow,10470
+53b943da-3c54-4069-ab60-41533a09d893,DABUR INDIA LIMITED,Backend Dev,E-commerce,"UI/UX, Tailwind, Kubernetes, SQL",Bangalore,27594
+ca954839-5392-48eb-8e57-ef42560cccf2,ITC LIMITED,Marketing Intern,E-commerce,"Kubernetes, Tailwind, AutoCAD",Pune,35197

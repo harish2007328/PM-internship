@@ -1,0 +1,11 @@
+user_id,name,email,caste,location,family_income,major,skills
+76432ad8-0ac6-43f8-ac3c-eb33c89c22c9,Tanvi Kulkarni,tanvi.kulkarni@example.com,SC,Hyderabad,> 8L,Computer Science,"Market Research, Java, PLC"
+9b8d8e97-8043-4fd3-9301-70543bc7be73,Aditya Rao,aditya.rao@example.com,General,Lucknow,2L - 5L,AI & Data Science,"Kubernetes, UI/UX, SQL, Node.js, AutoCAD, Communication"
+d4949d12-f978-4533-ab8a-f0fe0af53eb4,Manish Joshi,manish.joshi@example.com,SC,Pune,> 8L,Mechanical,"Machine Learning, Java, Kubernetes, SQL"
+b98eb811-5a30-4eb7-bca3-96ed9872f476,Arjun Sharma,arjun.sharma@example.com,General,Kanpur,< 2L,Mechanical,"Market Research, Figma, AutoCAD, Java, React, Mechanical Design"
+05cc4b5f-610d-4046-816e-c64a8b4754cd,Priya Patel,priya.patel@example.com,EWS,Nagpur,5L - 8L,Business Management,"PLC, Python, Figma"
+931aa69c-6fc9-48eb-9151-f4f8c8a8623b,Rohan Deshmukh,rohan.deshmukh@example.com,ST,Chennai,< 2L,ECE,"Market Research, AutoCAD, SQL"
+a42842b8-15ee-4742-92dc-02934c894cf6,Sneha Reddy,sneha.reddy@example.com,General,Ahmedabad,5L - 8L,Mechanical,"Python, AWS, Java, SQL, Communication, PLC"
+4731baac-ae04-4ac8-a0bc-ce29e8019fa6,Rahul Verma,rahul.verma@example.com,General,Kanpur,5L - 8L,AI & Data Science,"Project Management, Market Research, Kubernetes, Figma, Node.js, AWS"
+a7c4b9e6-c6f2-42cb-8772-c1867697759d,Abhishek Das,abhishek.das@example.com,SC,Mumbai,2L - 5L,Business Management,"Java, Docker, Market Research"
+43f1dafb-7b96-4b37-ac86-8694917e3bea,Ishita Gupta,ishita.gupta@example.com,General,Delhi,> 8L,Computer Science,"Communication, Tailwind, Docker, SQL, Project Management, React"

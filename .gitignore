@@ -1,41 +1,16 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-# lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-db.sqlite3
-.env
-venv/
+# Allow all data, cache, and local vectors as requested
+# But exclude massive library folders (node_modules, venv) to prevent GitHub push errors.
 
-# Node
+# Library folders (DO NOT PUSH THESE - use FIX_CLONE.bat instead)
 node_modules/
-dist
-dist-ssr
-*.local
+venv/
+env/
+.env
 
 # System/IDE
 .vscode/
 .idea/
 .DS_Store
-*.log
-*.npy
-*.pkl
-*.csv
-!seed_data.py
+
+# Everything else is allowed (pycache, csv, npy, pkl, etc.)
+# No other ignores.
