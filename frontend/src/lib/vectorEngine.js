@@ -1,13 +1,21 @@
-import { pipeline } from '@xenova/transformers';
+import { pipeline, env } from '@xenova/transformers';
 
 let extractor = null;
 
+// Allow ONNX to run in the browser without attempting to register local backends
+env.allowLocalModels = false;
+env.useBrowserCache = true;
+
 export const initVectorModel = async () => {
     if (extractor) return extractor;
-    // Load the feature extraction pipeline
-    // Uses the version of all-MiniLM-L6-v2 compatible with Transformers.js
-    extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-    return extractor;
+    try {
+        // Load the feature extraction pipeline
+        extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+        return extractor;
+    } catch (err) {
+        console.error("Failed to load AI model:", err);
+        throw err;
+    }
 };
 
 export const getEmbedding = async (text) => {
