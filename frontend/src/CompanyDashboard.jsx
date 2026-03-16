@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { insforge } from './lib/insforge';
 import { calculateMatchScore, calculateVectorScore } from './lib/matching';
+import { getEmbedding } from './lib/vectorEngine';
 
 const CompanyDashboard = ({ preSelectedJobId }) => {
   const [activeTab, setActiveTab] = useState(preSelectedJobId ? 'applicants' : 'post'); 
@@ -55,8 +56,14 @@ const CompanyDashboard = ({ preSelectedJobId }) => {
   const handlePost = async (e) => {
     e.preventDefault();
     setIsPosting(true);
+    const payload = { ...jobData, stipend: parseInt(jobData.stipend) };
     try {
-      const { data, error } = await insforge.database.from('pm_jobs').insert([{ ...jobData, stipend: parseInt(jobData.stipend) }]).select();
+      const text = `${jobData.role} at ${jobData.company} requiring ${jobData.required_skills}`;
+      payload.embedding = await getEmbedding(text);
+    } catch (e) { console.warn("Vector generation failed for new job"); }
+
+    try {
+      const { data, error } = await insforge.database.from('pm_jobs').insert([payload]).select();
       if (!error && data) {
         setIsPosting(false);
         const newJob = data[0];

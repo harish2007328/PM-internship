@@ -16,6 +16,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { insforge } from './lib/insforge';
+import { getEmbedding } from './lib/vectorEngine';
 
 // --- Constants ---
 const PREDEFINED_SKILLS = [
@@ -534,15 +535,22 @@ const Register = ({ onRegistrationSuccess }) => {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
+      const skillsStr = formData.skills.join(', ');
       const payload = {
         name: formData.name,
         email: formData.email,
         caste: formData.caste,
-        location: formData.city, // using city for location
+        location: formData.city, 
         family_income: formData.family_income,
         major: formData.major,
-        skills: formData.skills.join(', ')
+        skills: skillsStr
       };
+
+      // Generate embedding on the fly for the new user
+      try {
+        const text = `${formData.major} student skilled in ${skillsStr}`;
+        payload.embedding = await getEmbedding(text);
+      } catch (e) { console.warn("Failed to generate embedding for new user, sync will catch it later."); }
 
       const { data, error } = await insforge.database.from('pm_users').insert([payload]).select();
       

@@ -16,24 +16,31 @@ export const calculateMatchScore = (userSkills, jobSkills) => {
   return Math.min(1.0, baseScore + (intersect.length > 0 ? 0.1 : 0));
 };
 
-// Advanced Semantic Vector Matching (Xenova / Transformers.js)
+// Advanced Semantic Vector Matching (Cloud + Keyword Hybrid)
 export const calculateVectorScore = async (user, job) => {
   try {
-    // Exact text pattern from your previous logic
+    const keywordScore = calculateMatchScore(user.skills || '', job.required_skills || '');
+
+    // Stage 1: High-Speed Database Vector Match
+    if (user.embedding && job.embedding) {
+      const semanticScore = cosineSimilarity(user.embedding, job.embedding);
+      
+      // If skills are identical, ensure a perfect 1.0
+      if (keywordScore === 1.0) return 1.0;
+      
+      // Hybrid: 85% Semantic Intelligence + 15% Strict Keyword Overlap
+      return (semanticScore * 0.85) + (keywordScore * 0.15);
+    }
+
+    // Stage 2: Background Fallback (Only if sync hasn't occurred)
     const userText = `${user.major} student skilled in ${user.skills}`;
-    // Job text representation
     const jobText = `${job.role} at ${job.company} requiring ${job.required_skills}`;
 
     const userVec = await getEmbedding(userText);
     const jobVec = await getEmbedding(jobText);
 
     const semanticScore = cosineSimilarity(userVec, jobVec);
-    
-    // Combine with keyword overlap for robustness
-    const keywordScore = calculateMatchScore(user.skills, job.required_skills);
-    
-    // 70% Semantic (Vector) + 30% Key Match
-    return (semanticScore * 0.7) + (keywordScore * 0.3);
+    return (semanticScore * 0.85) + (keywordScore * 0.15);
   } catch (err) {
     console.warn("Vector scoring failed, falling back to keywords:", err);
     return calculateMatchScore(user.skills, job.required_skills);
