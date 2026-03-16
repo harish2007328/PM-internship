@@ -1,20 +1,43 @@
-// Basic TF-IDF style matching logic for frontend
+import { getEmbedding, cosineSimilarity } from './vectorEngine';
+
+// Basic TF-IDF style matching logic for frontend (Keep for fast initial render)
 export const calculateMatchScore = (userSkills, jobSkills) => {
   if (!userSkills || !jobSkills) return 0;
   
   const uSkills = userSkills.toLowerCase().replace(/;/g, ',').split(',').map(s => s.trim()).filter(s => s);
   const jSkills = jobSkills.toLowerCase().replace(/;/g, ',').split(',').map(s => s.trim()).filter(s => s);
   
-  if (jSkills.length === 0) return 0.5; // Base score if no skills listed
+  if (jSkills.length === 0) return 0.5; 
   
   const intersect = jSkills.filter(s => uSkills.includes(s));
   const baseScore = intersect.length / jSkills.length;
   
-  // Boosting for exact subsets
   if (intersect.length === jSkills.length) return 1.0;
-  
-  // Small boost for any overlap to match semantic "feel"
   return Math.min(1.0, baseScore + (intersect.length > 0 ? 0.1 : 0));
+};
+
+// Advanced Semantic Vector Matching (Xenova / Transformers.js)
+export const calculateVectorScore = async (user, job) => {
+  try {
+    // Exact text pattern from your previous logic
+    const userText = `${user.major} student skilled in ${user.skills}`;
+    // Job text representation
+    const jobText = `${job.role} at ${job.company} requiring ${job.required_skills}`;
+
+    const userVec = await getEmbedding(userText);
+    const jobVec = await getEmbedding(jobText);
+
+    const semanticScore = cosineSimilarity(userVec, jobVec);
+    
+    // Combine with keyword overlap for robustness
+    const keywordScore = calculateMatchScore(user.skills, job.required_skills);
+    
+    // 70% Semantic (Vector) + 30% Key Match
+    return (semanticScore * 0.7) + (keywordScore * 0.3);
+  } catch (err) {
+    console.warn("Vector scoring failed, falling back to keywords:", err);
+    return calculateMatchScore(user.skills, job.required_skills);
+  }
 };
 
 export const getFinancialRisk = (userLoc, jobLoc, stipend) => {

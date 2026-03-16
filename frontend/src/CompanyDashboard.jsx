@@ -13,7 +13,7 @@ import {
   Zap
 } from 'lucide-react';
 import { insforge } from './lib/insforge';
-import { calculateMatchScore } from './lib/matching';
+import { calculateMatchScore, calculateVectorScore } from './lib/matching';
 
 const CompanyDashboard = ({ preSelectedJobId }) => {
   const [activeTab, setActiveTab] = useState(preSelectedJobId ? 'applicants' : 'post'); 
@@ -76,7 +76,6 @@ const CompanyDashboard = ({ preSelectedJobId }) => {
     
     setIsLoading(true);
     try {
-      // If job not in state (e.g. direct load from demo), fetch it
       if (!selectedJob) {
         const { data: jobData } = await insforge.database.from('pm_jobs').select('*').eq('job_id', idToUse).single();
         if (jobData) selectedJob = jobData;
@@ -95,11 +94,9 @@ const CompanyDashboard = ({ preSelectedJobId }) => {
       const selectedSet = new Set(selections?.map(s => s.user_id) || []);
       
       if (Array.isArray(usersData)) {
+        // Step 1: Rapid Keyword Match
         const processed = usersData.map(user => {
-          const uSkills = user.skills || '';
-          const jSkills = selectedJob?.required_skills || '';
-          const score = calculateMatchScore(uSkills, jSkills);
-          
+          const score = calculateMatchScore(user.skills || '', selectedJob?.required_skills || '');
           return { 
             ...user, 
             id: user.user_id, 
@@ -110,9 +107,20 @@ const CompanyDashboard = ({ preSelectedJobId }) => {
         }).sort((a, b) => b.score - a.score);
         
         setShortlisted(processed);
+        setIsLoading(false); // Show keyword results first
+
+        // Step 2: Background Semantic AI Update
+        const withVectors = await Promise.all(processed.map(async (candidate) => {
+          const vScore = await calculateVectorScore(candidate, selectedJob);
+          return { ...candidate, score: Math.round(vScore * 100) };
+        }));
+
+        setShortlisted([...withVectors].sort((a, b) => b.score - a.score));
       }
-    } catch (err) { console.error(err); }
-    finally { setIsLoading(false); }
+    } catch (err) { 
+      console.error(err); 
+      setIsLoading(false);
+    }
   };
 
   const handleSelect = async (candidateId) => {
