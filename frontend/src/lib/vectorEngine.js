@@ -2,9 +2,13 @@ import { pipeline, env } from '@xenova/transformers';
 
 let extractor = null;
 
-// Allow ONNX to run in the browser without attempting to register local backends
+// Configure Transformers.js environment before anything else
 env.allowLocalModels = false;
 env.useBrowserCache = true;
+// Force the use of the WASM backend and disable multi-threading for initialization stability
+if (env.backends && env.backends.onnx) {
+    env.backends.onnx.wasm.numThreads = 1;
+}
 
 export const initVectorModel = async () => {
     if (extractor) return extractor;
