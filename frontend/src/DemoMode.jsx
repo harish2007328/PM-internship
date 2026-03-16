@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Zap, Code, Palette, BarChart, ArrowRight, Play, Building2, Globe, Cpu, LineChart, MapPin } from 'lucide-react';
+import { insforge } from './lib/insforge';
 
 const DemoMode = ({ onSelectProfile, onSelectCompany, setView }) => {
   const [activeTab, setActiveTab] = useState('students');
@@ -9,25 +10,27 @@ const DemoMode = ({ onSelectProfile, onSelectCompany, setView }) => {
   const [companies, setCompanies] = useState([]);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/users')
-      .then(res => res.json())
-      .then(data => setStudents(data.map((s, i) => ({
-        ...s,
-        icon: [Code, Zap, BarChart, Palette, Globe][i % 5],
-        color: ["bg-blue-500", "bg-purple-500", "bg-green-500", "bg-orange-500", "bg-sky-500"][i % 5],
-        category: s.major
-      }))))
-      .catch(err => console.error("Error fetching demo students:", err));
-
-    fetch('http://127.0.0.1:8000/internships')
-      .then(res => res.json())
-      .then(data => setCompanies(data.map((c, i) => ({
-        ...c,
-        icon: [Cpu, Building2, LineChart, Palette, Globe][i % 5],
-        color: ["bg-indigo-600", "bg-amber-600", "bg-emerald-600", "bg-rose-500", "bg-sky-600"][i % 5],
-        category: c.sector
-      }))))
-      .catch(err => console.error("Error fetching demo companies:", err));
+    const loadDemoData = async () => {
+      const { data: userData } = await insforge.from('pm_users').select('*').limit(5);
+      if (userData) {
+        setStudents(userData.map((s, i) => ({
+          ...s,
+          icon: [Code, Zap, BarChart, Palette, Globe][i % 5],
+          color: ["bg-blue-500", "bg-purple-500", "bg-green-500", "bg-orange-500", "bg-sky-500"][i % 5],
+          category: s.major
+        })));
+      }
+      const { data: jobsData } = await insforge.from('pm_jobs').select('*').limit(5);
+      if (jobsData) {
+        setCompanies(jobsData.map((c, i) => ({
+          ...c,
+          icon: [Cpu, Building2, LineChart, Palette, Globe][i % 5],
+          color: ["bg-indigo-600", "bg-amber-600", "bg-emerald-600", "bg-rose-500", "bg-sky-600"][i % 5],
+          category: c.sector
+        })));
+      }
+    };
+    loadDemoData();
   }, []);
 
   const handleLaunchStudent = (profile) => {

@@ -15,6 +15,7 @@ import {
   Circle,
   ArrowRight
 } from 'lucide-react';
+import { insforge } from './lib/insforge';
 
 // --- Constants ---
 const PREDEFINED_SKILLS = [
@@ -543,22 +544,18 @@ const Register = ({ onRegistrationSuccess }) => {
         skills: formData.skills.join(', ')
       };
 
-      const response = await fetch('http://127.0.0.1:8000/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      const { data, error } = await insforge.from('pm_users').insert([payload]).select();
       
-      if (response.ok) {
-        const result = await response.json();
-        setRegisteredUserId(result.user_id);
+      if (!error && data) {
+        setRegisteredUserId(data[0].user_id);
         setSubmitted(true);
       } else {
-        alert('Failed to register. Please ensure backend is running.');
+        console.error('Registration error:', error);
+        alert('Failed to register. ' + (error?.message || 'Check console for details.'));
       }
     } catch (err) {
       console.error(err);
-      alert('Network error. Is the backend server running at localhost:8000?');
+      alert('Network error occurred during registration.');
     } finally {
       setIsSubmitting(false);
     }

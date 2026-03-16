@@ -4,6 +4,7 @@ import CompanyDashboard from './CompanyDashboard';
 import StudentFeed from './StudentFeed';
 import DemoMode from './DemoMode';
 import { User, Building2, LayoutGrid, LogOut, Mail, MapPin, Briefcase, Zap } from 'lucide-react';
+import { insforge } from './lib/insforge';
 
 function App() {
   const [view, setView] = useState('demo'); // Default to 'demo' for hackathon
@@ -13,9 +14,10 @@ function App() {
 
   useEffect(() => {
     if (currentUserId) {
-      fetch(`http://127.0.0.1:8000/user/${currentUserId}`)
-        .then(res => res.json())
-        .then(data => setUserProfile(data))
+      insforge.from('pm_users').select('*').eq('user_id', currentUserId).single()
+        .then(({ data, error }) => {
+          if (!error) setUserProfile(data);
+        })
         .catch(err => console.error(err));
     } else {
       setUserProfile(null);

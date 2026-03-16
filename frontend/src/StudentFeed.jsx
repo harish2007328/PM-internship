@@ -19,6 +19,8 @@ import {
 import MockTest from './MockTest';
 import ChatBot from './ChatBot';
 import ReactMarkdown from 'react-markdown';
+import { insforge } from './lib/insforge';
+import { calculateMatchScore, getFinancialRisk } from './lib/matching';
 
 const JobCard = ({ job, rank, isAbsoluteTop, isGolden, isHighestStipend, onApply, onOpenMock, canApply }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -210,21 +212,37 @@ const StudentFeed = ({ userId }) => {
     const fetchMatches = async () => {
       if (!userId) return;
       try {
-        const response = await fetch(`http://127.0.0.1:8000/matches/${userId}`);
-        if (response.ok) {
-          const data = await response.json();
-          // Sort by score initially to find absolute top match and ranks
-          const sorted = [...data].sort((a, b) => b.score - a.score);
-          const rankMap = {};
-          sorted.forEach((j, i) => { rankMap[j.job_id] = i + 1; });
-          
-          setMatches(data);
-          setFilteredMatches(data);
-          setTopGlobalIds(sorted.slice(0, 5).map(j => j.job_id));
-          setGlobalRankMap(rankMap);
-          if (sorted.length > 0) setAbsoluteTopJobId(sorted[0].job_id);
-        }
-      } catch (err) { console.error(err); }
+        const { data: userData, error: userError } = await insforge.from('pm_users').select('*').eq('user_id', userId).single();
+        if (userError) throw userError;
+
+        const { data: jobsData, error: jobsError } = await insforge.from('pm_jobs').select('*');
+        if (jobsError) throw jobsError;
+
+        const { data: appsData } = await insforge.from('pm_applications').select('job_id').eq('user_id', userId);
+        const appliedIds = new Set(appsData?.map(a => a.job_id) || []);
+
+        const processed = jobsData.map(job => {
+          const score = calculateMatchScore(userData.skills, job.required_skills);
+          const { risk, message } = getFinancialRisk(userData.location, job.location, job.stipend);
+          return {
+            ...job,
+            score,
+            financial_risk: risk,
+            risk_message: message,
+            has_applied: appliedIds.has(job.job_id)
+          };
+        });
+
+        const sorted = [...processed].sort((a, b) => b.score - a.score);
+        const rankMap = {};
+        sorted.forEach((j, i) => { rankMap[j.job_id] = i + 1; });
+        
+        setMatches(processed);
+        setFilteredMatches(processed);
+        setTopGlobalIds(sorted.slice(0, 5).map(j => j.job_id));
+        setGlobalRankMap(rankMap);
+        if (sorted.length > 0) setAbsoluteTopJobId(sorted[0].job_id);
+      } catch (err) { console.error('Error:', err); }
       finally { setIsLoading(false); }
     };
     fetchMatches();
@@ -251,12 +269,8 @@ const StudentFeed = ({ userId }) => {
     if (currentApplied >= 5) return false;
 
     try {
-      const resp = await fetch(`http://127.0.0.1:8000/apply`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, job_id: jobId })
-      });
-      if (resp.ok) {
+      const { error } = await insforge.from('pm_applications').insert([{ user_id: userId, job_id: jobId, timestamp: new Date().toISOString() }]);
+      if (!error) {
         setMatches(matches.map(m => m.job_id === jobId ? {...m, has_applied: true} : m));
         return true;
       }

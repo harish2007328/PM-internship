@@ -12,6 +12,8 @@ import {
   Award,
   Zap
 } from 'lucide-react';
+import { insforge } from './lib/insforge';
+import { calculateMatchScore } from './lib/matching';
 
 const CompanyDashboard = ({ preSelectedJobId }) => {
   const [activeTab, setActiveTab] = useState(preSelectedJobId ? 'applicants' : 'post'); 
@@ -34,12 +36,13 @@ const CompanyDashboard = ({ preSelectedJobId }) => {
 
   const [jobs, setJobs] = useState([]);
 
+  const fetchJobs = async () => {
+    const { data, error } = await insforge.from('pm_jobs').select('*');
+    if (!error) setJobs(data);
+  };
+
   React.useEffect(() => {
-    // Fetch all jobs to populate the job selector
-    fetch('http://127.0.0.1:8000/internships') 
-      .then(res => res.json())
-      .then(data => setJobs(data))
-      .catch(err => console.error(err));
+    fetchJobs();
   }, []);
 
   React.useEffect(() => {
@@ -53,85 +56,46 @@ const CompanyDashboard = ({ preSelectedJobId }) => {
     e.preventDefault();
     setIsPosting(true);
     try {
-      const response = await fetch('http://127.0.0.1:8000/internships', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...jobData,
-          stipend: parseInt(jobData.stipend)
-        })
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
+      const { data, error } = await insforge.from('pm_jobs').insert([{ ...jobData, stipend: parseInt(jobData.stipend) }]).select();
+      if (!error && data) {
         setIsPosting(false);
-        setCurrentJobId(result.job_id);
+        const newJob = data[0];
+        setCurrentJobId(newJob.job_id);
         setActiveTab('applicants');
-        fetchApplicants(result.job_id);
-        
-        // Refresh job list
-        fetch('http://127.0.0.1:8000/matches/any_id')
-          .then(res => res.json())
-          .then(data => setJobs(data));
+        fetchJobs(); 
+        fetchApplicants(newJob.job_id);
       }
-    } catch (err) {
-      console.error(err);
-      setIsPosting(false);
-    }
+    } catch (err) { console.error(err); }
+    finally { setIsPosting(false); }
   };
 
   const fetchApplicants = async (jobId) => {
     const idToUse = jobId || currentJobId;
     if (!idToUse) return;
-    
-    // Sync job details for the risk check
     const selectedJob = jobs.find(j => j.job_id === idToUse);
-    if (selectedJob) {
-      setJobData(prev => ({ ...prev, location: selectedJob.location }));
-    }
-    
     setIsLoading(true);
     try {
-      const response = await fetch(`http://127.0.0.1:8000/applicants/${idToUse}`);
-      if (response.ok) {
-        const data = await response.json();
-        // Defensive check: Ensure data is an array
-        if (Array.isArray(data)) {
-          const transformed = data.map((c) => ({
-            ...c,
-            id: c.user_id,
-            score: Math.round((c.score || 0) * 100),
-            type: c.shortlist_type || 'Applied',
-            skills: Array.isArray(c.skills) ? c.skills : []
-          }));
-          setShortlisted(transformed);
-        }
+      const { data: apps } = await insforge.from('pm_applications').select('user_id, pm_users (*)').eq('job_id', idToUse);
+      const { data: selections } = await insforge.from('pm_selections').select('user_id').eq('job_id', idToUse);
+      const selectedSet = new Set(selections?.map(s => s.user_id) || []);
+      if (Array.isArray(apps)) {
+        const processed = apps.map(app => {
+          const user = app.pm_users;
+          const score = calculateMatchScore(user.skills, selectedJob?.required_skills || '');
+          return { ...user, id: user.user_id, score: Math.round(score * 100), is_selected: selectedSet.has(user.user_id), skills: user.skills ? user.skills.split(',').map(s => s.trim()) : [] };
+        }).sort((a, b) => b.score - a.score);
+        setShortlisted(processed);
       }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
+    } catch (err) { console.error(err); }
+    finally { setIsLoading(false); }
   };
 
   const handleSelect = async (candidateId) => {
     if (!currentJobId) return;
     try {
-      const response = await fetch('http://127.0.0.1:8000/select', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: candidateId,
-          job_id: currentJobId
-        })
-      });
-      if (response.ok) {
-        // Refresh applicants to show updated selection status
-        fetchApplicants(currentJobId);
-      }
-    } catch (err) {
-      console.error(err);
-    }
+      const { error } = await insforge.from('pm_selections').insert([{ user_id: candidateId, job_id: currentJobId, timestamp: new Date().toISOString() }]);
+      if (!error) fetchApplicants(currentJobId);
+    } catch (err) { console.error(err); }
   };
 
   return (
