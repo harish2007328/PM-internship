@@ -212,13 +212,13 @@ const StudentFeed = ({ userId }) => {
     const fetchMatches = async () => {
       if (!userId) return;
       try {
-        const { data: userData, error: userError } = await insforge.from('pm_users').select('*').eq('user_id', userId).single();
+        const { data: userData, error: userError } = await insforge.database.from('pm_users').select('*').eq('user_id', userId).single();
         if (userError) throw userError;
 
-        const { data: jobsData, error: jobsError } = await insforge.from('pm_jobs').select('*');
+        const { data: jobsData, error: jobsError } = await insforge.database.from('pm_jobs').select('*');
         if (jobsError) throw jobsError;
 
-        const { data: appsData } = await insforge.from('pm_applications').select('job_id').eq('user_id', userId);
+        const { data: appsData } = await insforge.database.from('pm_applications').select('job_id').eq('user_id', userId);
         const appliedIds = new Set(appsData?.map(a => a.job_id) || []);
 
         const processed = jobsData.map(job => {
@@ -269,7 +269,9 @@ const StudentFeed = ({ userId }) => {
     if (currentApplied >= 5) return false;
 
     try {
-      const { error } = await insforge.from('pm_applications').insert([{ user_id: userId, job_id: jobId, timestamp: new Date().toISOString() }]);
+      const { error } = await insforge.database
+        .from('pm_applications')
+        .insert([{ user_id: userId, job_id: jobId, timestamp: new Date().toISOString() }]);
       if (!error) {
         setMatches(matches.map(m => m.job_id === jobId ? {...m, has_applied: true} : m));
         return true;
@@ -288,7 +290,17 @@ const StudentFeed = ({ userId }) => {
   const uniqueRoles = ['All', ...new Set(matches.map(j => j.role))];
 
   const handleUnapply = async (jobId) => {
-    setMatches(matches.map(m => m.job_id === jobId ? {...m, has_applied: false} : m));
+    try {
+      const { error } = await insforge.database
+        .from('pm_applications')
+        .delete()
+        .eq('user_id', userId)
+        .eq('job_id', jobId);
+
+      if (!error) {
+        setMatches(matches.map(m => m.job_id === jobId ? {...m, has_applied: false} : m));
+      }
+    } catch (err) { console.error(err); }
   };
 
   return (

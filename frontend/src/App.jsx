@@ -14,7 +14,7 @@ function App() {
 
   useEffect(() => {
     if (currentUserId) {
-      insforge.from('pm_users').select('*').eq('user_id', currentUserId).single()
+      insforge.database.from('pm_users').select('*').eq('user_id', currentUserId).single()
         .then(({ data, error }) => {
           if (!error) setUserProfile(data);
         })

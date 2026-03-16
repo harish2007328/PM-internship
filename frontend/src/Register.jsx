@@ -544,7 +544,7 @@ const Register = ({ onRegistrationSuccess }) => {
         skills: formData.skills.join(', ')
       };
 
-      const { data, error } = await insforge.from('pm_users').insert([payload]).select();
+      const { data, error } = await insforge.database.from('pm_users').insert([payload]).select();
       
       if (!error && data) {
         setRegisteredUserId(data[0].user_id);

@@ -37,7 +37,7 @@ const CompanyDashboard = ({ preSelectedJobId }) => {
   const [jobs, setJobs] = useState([]);
 
   const fetchJobs = async () => {
-    const { data, error } = await insforge.from('pm_jobs').select('*');
+    const { data, error } = await insforge.database.from('pm_jobs').select('*');
     if (!error) setJobs(data);
   };
 
@@ -56,7 +56,7 @@ const CompanyDashboard = ({ preSelectedJobId }) => {
     e.preventDefault();
     setIsPosting(true);
     try {
-      const { data, error } = await insforge.from('pm_jobs').insert([{ ...jobData, stipend: parseInt(jobData.stipend) }]).select();
+      const { data, error } = await insforge.database.from('pm_jobs').insert([{ ...jobData, stipend: parseInt(jobData.stipend) }]).select();
       if (!error && data) {
         setIsPosting(false);
         const newJob = data[0];
@@ -75,8 +75,8 @@ const CompanyDashboard = ({ preSelectedJobId }) => {
     const selectedJob = jobs.find(j => j.job_id === idToUse);
     setIsLoading(true);
     try {
-      const { data: apps } = await insforge.from('pm_applications').select('user_id, pm_users (*)').eq('job_id', idToUse);
-      const { data: selections } = await insforge.from('pm_selections').select('user_id').eq('job_id', idToUse);
+      const { data: apps } = await insforge.database.from('pm_applications').select('user_id, pm_users (*)').eq('job_id', idToUse);
+      const { data: selections } = await insforge.database.from('pm_selections').select('user_id').eq('job_id', idToUse);
       const selectedSet = new Set(selections?.map(s => s.user_id) || []);
       if (Array.isArray(apps)) {
         const processed = apps.map(app => {
@@ -93,7 +93,7 @@ const CompanyDashboard = ({ preSelectedJobId }) => {
   const handleSelect = async (candidateId) => {
     if (!currentJobId) return;
     try {
-      const { error } = await insforge.from('pm_selections').insert([{ user_id: candidateId, job_id: currentJobId, timestamp: new Date().toISOString() }]);
+      const { error } = await insforge.database.from('pm_selections').insert([{ user_id: candidateId, job_id: currentJobId, timestamp: new Date().toISOString() }]);
       if (!error) fetchApplicants(currentJobId);
     } catch (err) { console.error(err); }
   };

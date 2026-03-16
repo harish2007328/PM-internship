@@ -11,7 +11,8 @@ const DemoMode = ({ onSelectProfile, onSelectCompany, setView }) => {
 
   useEffect(() => {
     const loadDemoData = async () => {
-      const { data: userData } = await insforge.from('pm_users').select('*').limit(5);
+      // Fetch students
+      const { data: userData } = await insforge.database.from('pm_users').select('*').limit(5);
       if (userData) {
         setStudents(userData.map((s, i) => ({
           ...s,
@@ -20,7 +21,8 @@ const DemoMode = ({ onSelectProfile, onSelectCompany, setView }) => {
           category: s.major
         })));
       }
-      const { data: jobsData } = await insforge.from('pm_jobs').select('*').limit(5);
+      // Fetch jobs
+      const { data: jobsData } = await insforge.database.from('pm_jobs').select('*').limit(5);
       if (jobsData) {
         setCompanies(jobsData.map((c, i) => ({
           ...c,
