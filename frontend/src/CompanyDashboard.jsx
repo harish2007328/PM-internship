@@ -113,7 +113,7 @@ const CompanyDashboard = ({ preSelectedJobId }) => {
           };
         }).sort((a, b) => b.score - a.score);
         
-        setShortlisted(processed);
+        setShortlisted(processed.slice(0, 3));
         setIsLoading(false); // Show keyword results first
 
         // Step 2: Background Semantic AI Update
@@ -122,7 +122,7 @@ const CompanyDashboard = ({ preSelectedJobId }) => {
           return { ...candidate, score: Math.round(vScore * 100) };
         }));
 
-        setShortlisted([...withVectors].sort((a, b) => b.score - a.score));
+        setShortlisted([...withVectors].sort((a, b) => b.score - a.score).slice(0, 3));
       }
     } catch (err) { 
       console.error(err); 
@@ -260,7 +260,7 @@ const CompanyDashboard = ({ preSelectedJobId }) => {
               className="space-y-6"
             >
               <div className="flex justify-between items-end mb-4">
-                <h3 className="flex items-center gap-2 font-heading"><Users size={20} /> All Applicants ({shortlisted.length})</h3>
+                <h3 className="flex items-center gap-2 font-heading"><Users size={20} /> Top 3 Potential Matches</h3>
                 <span className="text-xs font-bold text-textSecondary uppercase tracking-widest">Manual Selection Enabled</span>
               </div>
 
