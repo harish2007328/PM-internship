@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, X, Send, Bot, User, Sparkles, Loader2, MinusCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
-const GROQ_API_KEY = atob('Z3NrX2o3Z2RPbEdueFpTT2tFcUM5ZG9XV0dyeWIzRllJb0VDNkJHajRpMGhYS1JzU0UycTExeGY=');
+import { insforge } from './lib/insforge';
 
 const ChatBot = ({ userSkills, matches }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,43 +31,40 @@ const ChatBot = ({ userSkills, matches }) => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${GROQ_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [
-            {
-              role: "system",
-              content: `You are a career consultant for the PM Internship Scheme. 
-              CONTEXT:
-              - User Skills: ${userSkills || 'Not provided'}
-              - Top Match: ${matches?.[0]?.role} at ${matches?.[0]?.company} (${Math.round(matches?.[0]?.score * 100)}% match)
-              - Scheme Goal: Provide 1 crore internships over 5 years in top 500 companies.
-              - Monthly Stipend: ₹5,000 + ₹6,000 one-time assistance.
-              
-              YOUR CAPABILITIES:
-              1. Answer about the PM Internship Scheme rules.
-              2. Compare user's skills with the provided internship list.
-              3. Suggest specific internships from the list that fit the user.
-              4. Advise on skill gaps for roles they like.
-              
-              STYLE: Professional, encouraging, and tactical. Use bullet points and bold text for emphasis. Keep formatting clean.`
-            },
-            ...messages.slice(-5), // Send last 5 messages for context
-            { role: "user", content: userMessage }
-          ],
-          temperature: 0.7,
-          max_tokens: 600
-        })
+      const topMatch = matches?.[0];
+      const response = await insforge.ai.chat.completions.create({
+        model: "openai/gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: `You are a career consultant for the PM Internship Scheme. 
+            CONTEXT:
+            - User Skills: ${userSkills || 'Not provided'}
+            - Top Match: ${topMatch ? `${topMatch.role} at ${topMatch.company} (${Math.round(topMatch.score * 100)}% match)` : 'No matches found yet'}
+            - Scheme Goal: Provide 1 crore internships over 5 years in top 500 companies.
+            - Monthly Stipend: ₹5,000 + ₹6,000 one-time assistance.
+            
+            YOUR CAPABILITIES:
+            1. Answer about the PM Internship Scheme rules.
+            2. Compare user's skills with the provided internship list.
+            3. Suggest specific internships from the list that fit the user.
+            4. Advise on skill gaps for roles they like.
+            
+            STYLE: Professional, encouraging, and tactical. Use bullet points and bold text for emphasis. Keep formatting clean.`
+          },
+          ...messages.slice(-5).map(m => ({ role: m.role, content: m.content })),
+          { role: "user", content: userMessage }
+        ],
+        temperature: 0.7,
+        maxTokens: 600
       });
 
-      const data = await response.json();
-      const aiResponse = data.choices[0].message.content;
-      setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
+      if (response && response.choices && response.choices[0]) {
+        const aiResponse = response.choices[0].message.content;
+        setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
+      } else {
+        throw new Error("Invalid response from AI");
+      }
     } catch (error) {
       console.error("Chat Error:", error);
       setMessages(prev => [...prev, { role: 'assistant', content: "I encountered a synchronization error. Please try again." }]);

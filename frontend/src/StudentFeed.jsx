@@ -22,7 +22,7 @@ import ReactMarkdown from 'react-markdown';
 import { insforge } from './lib/insforge';
 import { calculateMatchScore, calculateVectorScore, getFinancialRisk } from './lib/matching';
 
-const JobCard = ({ job, rank, isAbsoluteTop, isGolden, isHighestStipend, onApply, onOpenMock, canApply }) => {
+const JobCard = ({ job, rank, isAbsoluteTop, isGolden, isHighestStipend, isBestLocation, onApply, onOpenMock, onOpenDetails, canApply }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const applied = job.has_applied;
@@ -83,6 +83,16 @@ const JobCard = ({ job, rank, isAbsoluteTop, isGolden, isHighestStipend, onApply
                    <span className="bg-green-600 text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded inline-block flex items-center gap-1">
                      <CheckCircle2 size={10} /> Selected
                    </span>
+                )}
+                {isHighestStipend && !isAbsoluteTop && (
+                  <span className="bg-amber-100 text-amber-700 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded inline-block">
+                    Top Pay
+                  </span>
+                )}
+                {isBestLocation && !isAbsoluteTop && (
+                  <span className="bg-blue-100 text-blue-700 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded inline-block">
+                    In Your City
+                  </span>
                 )}
               </div>
               
@@ -161,6 +171,13 @@ const JobCard = ({ job, rank, isAbsoluteTop, isGolden, isHighestStipend, onApply
                     
                     <div className="flex gap-2">
                       <button 
+                        onClick={(e) => { e.stopPropagation(); onOpenDetails(job); }}
+                        className={`px-4 py-3.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-all border
+                            ${isAbsoluteTop ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' : 'bg-white border-[#E2E0DC] text-[#1C2340] hover:bg-[#F5F4F2]'}`}
+                      >
+                        Details
+                      </button>
+                      <button 
                         onClick={handleApply}
                         disabled={applied || isApplying || (!canApply && !applied)}
                         className={`flex-1 px-8 py-3.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-all
@@ -207,18 +224,46 @@ const StudentFeed = ({ userId }) => {
   const [absoluteTopJobId, setAbsoluteTopJobId] = useState(null);
   const [globalRankMap, setGlobalRankMap] = useState({});
   const [viewingJob, setViewingJob] = useState(null);
+  const [userSkills, setUserSkills] = useState('');
+  const [userLocation, setUserLocation] = useState('');
 
   useEffect(() => {
     const fetchMatches = async () => {
       if (!userId) return;
+
+      // 1. Initial Load from Local Cache (Speed up UX)
       try {
-        const { data: userData, error: userError } = await insforge.database.from('pm_users').select('*').eq('user_id', userId).single();
-        if (userError) throw userError;
+        const cachedData = localStorage.getItem(`pm_matches_${userId}`);
+        if (cachedData) {
+          const { matches: cMatches, rankMap: cRankMap, topIds: cTopIds, absoluteTop: cAbsoluteTop, skills: cSkills } = JSON.parse(cachedData);
+          setMatches(cMatches);
+          setFilteredMatches(cMatches);
+          setGlobalRankMap(cRankMap);
+          setTopGlobalIds(cTopIds);
+          setAbsoluteTopJobId(cAbsoluteTop);
+          setUserSkills(cSkills);
+          if (cMatches?.[0]?.user_location) setUserLocation(cMatches[0].user_location);
+          setIsLoading(false); // Immediate render
+        }
+      } catch (e) { console.warn("Cache read failed", e); }
 
-        const { data: jobsData, error: jobsError } = await insforge.database.from('pm_jobs').select('*');
-        if (jobsError) throw jobsError;
+      try {
+        // Parallel Fetch: Fetch everything at once instead of one-by-one
+        const [userRes, jobsRes, appsRes] = await Promise.all([
+          insforge.database.from('pm_users').select('*').eq('user_id', userId).single(),
+          insforge.database.from('pm_jobs').select('*'),
+          insforge.database.from('pm_applications').select('job_id').eq('user_id', userId)
+        ]);
 
-        const { data: appsData } = await insforge.database.from('pm_applications').select('job_id').eq('user_id', userId);
+        if (userRes.error) throw userRes.error;
+        if (jobsRes.error) throw jobsRes.error;
+
+        const userData = userRes.data;
+        const jobsData = jobsRes.data;
+        const appsData = appsRes.data;
+        
+        setUserSkills(userData.skills || '');
+        setUserLocation(userData.location || '');
         const appliedIds = new Set(appsData?.map(a => a.job_id) || []);
 
         // Step 1: Rapid Keyword Match (Immediate Feedback)
@@ -235,6 +280,8 @@ const StudentFeed = ({ userId }) => {
         });
 
         const initialSorted = [...initialProcess].sort((a, b) => b.score - a.score);
+        
+        // Update UI with rapid results (keyword matching)
         setMatches(initialProcess);
         setFilteredMatches(initialProcess);
         setTopGlobalIds(initialSorted.slice(0, 5).map(j => j.job_id));
@@ -242,6 +289,7 @@ const StudentFeed = ({ userId }) => {
         setIsLoading(false);
 
         // Step 2: Background Vector Similarity (High Precision)
+        // Note: Already parallelized with Promise.all and using localStorage cache in vectorEngine.js
         const vectorResults = await Promise.all(jobsData.map(async (job) => {
           const vScore = await calculateVectorScore(userData, job);
           return { ...job, vScore };
@@ -256,11 +304,25 @@ const StudentFeed = ({ userId }) => {
         const rankMap = {};
         finalSorted.forEach((j, i) => { rankMap[j.job_id] = i + 1; });
 
+        const topIds = finalSorted.slice(0, 5).map(j => j.job_id);
+        const absTop = finalSorted[0]?.job_id;
+
         setMatches(finalProcessed);
         setFilteredMatches(finalProcessed);
-        setTopGlobalIds(finalSorted.slice(0, 5).map(j => j.job_id));
+        setTopGlobalIds(topIds);
         setGlobalRankMap(rankMap);
-        if (finalSorted.length > 0) setAbsoluteTopJobId(finalSorted[0].job_id);
+        setAbsoluteTopJobId(absTop);
+
+        // Update Cache
+        localStorage.setItem(`pm_matches_${userId}`, JSON.stringify({
+          matches: finalProcessed,
+          rankMap,
+          topIds,
+          absoluteTop: absTop,
+          skills: userData.skills,
+          user_location: userData.location,
+          timestamp: Date.now()
+        }));
 
       } catch (err) { 
         console.error('Error in AI Engine:', err); 
@@ -276,6 +338,7 @@ const StudentFeed = ({ userId }) => {
     if (roleFilter !== 'All') result = result.filter(j => j.role === roleFilter);
     if (sortBy === 'stipend_asc') result.sort((a, b) => a.stipend - b.stipend);
     else if (sortBy === 'stipend_desc') result.sort((a, b) => b.stipend - a.stipend);
+    else if (sortBy === 'score_asc') result.sort((a, b) => a.score - b.score);
     else result.sort((a, b) => b.score - a.score);
     setFilteredMatches(result);
   }, [locationFilter, roleFilter, sortBy, matches]);
@@ -398,41 +461,62 @@ const StudentFeed = ({ userId }) => {
                    </button>
                  </div>
 
-                 <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-                    <div>
-                      <h4 className="text-[10px] font-black uppercase text-[#1C2340] tracking-[0.2em] mb-3 opacity-30">Job Description</h4>
-                      <div className="text-xs text-[#1C2340]/70 leading-relaxed font-body markdown-content">
-                        <ReactMarkdown>{viewingJob.description}</ReactMarkdown>
+                <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="bg-[#FDFCFB] border border-[#E2E0DC] rounded-xl p-6">
+                    <h4 className="text-[10px] font-black uppercase text-[#1C2340] tracking-[0.2em] mb-4 opacity-30">Job Description</h4>
+                    <div className="text-sm text-[#1C2340]/80 leading-relaxed font-body markdown-content prose prose-sm max-w-none">
+                      <ReactMarkdown>{viewingJob.description || "No detailed description available for this role."}</ReactMarkdown>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-[#FDFCFB] border border-[#E2E0DC] rounded-xl p-6">
+                      <h4 className="text-[10px] font-black uppercase text-[#1C2340] tracking-[0.2em] mb-3 opacity-30">Stipend Details</h4>
+                      <p className="text-xl font-black text-[#E05C2A]">₹{viewingJob.stipend.toLocaleString()}<span className="text-xs font-bold opacity-40 ml-1">/month</span></p>
+                      <p className="text-[9px] font-bold text-[#6B7280] uppercase tracking-widest mt-2">{viewingJob.sector || "General"} Sector</p>
+                    </div>
+                    <div className="bg-[#FDFCFB] border border-[#E2E0DC] rounded-xl p-6">
+                      <h4 className="text-[10px] font-black uppercase text-[#1C2340] tracking-[0.2em] mb-3 opacity-30">Core Stack</h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {viewingJob.required_skills?.split(',').map(s => (
+                          <span key={s} className="px-2.5 py-1.5 bg-white border border-[#E2E0DC] text-[9px] font-bold text-[#1C2340] rounded-lg shadow-sm">{s.trim()}</span>
+                        ))}
                       </div>
                     </div>
+                  </div>
 
-                    <div className="grid grid-cols-2 gap-8">
-                       <div>
-                         <h4 className="text-[10px] font-black uppercase text-[#1C2340] tracking-[0.2em] mb-3 opacity-30">Stipend Range</h4>
-                         <p className="text-sm font-black text-[#E05C2A]">₹{viewingJob.stipend.toLocaleString()}<span className="text-[10px] opacity-40">/month</span></p>
-                       </div>
-                       <div>
-                         <h4 className="text-[10px] font-black uppercase text-[#1C2340] tracking-[0.2em] mb-3 opacity-30">Requirements</h4>
-                         <div className="flex flex-wrap gap-1.5">
-                            {viewingJob.skills_required?.split(',').map(s => (
-                              <span key={s} className="px-2 py-1 bg-[#F5F4F2] text-[9px] font-bold text-[#1C2340] rounded">{s.trim()}</span>
-                            ))}
-                         </div>
-                       </div>
+                  <div className={`p-6 rounded-xl border flex items-center gap-4 ${viewingJob.financial_risk === "LOW" ? "bg-green-50 border-green-100 text-green-700" : "bg-red-50 border-red-100 text-red-700"}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${viewingJob.financial_risk === "LOW" ? "bg-green-100" : "bg-red-100"}`}>
+                      <AlertCircle size={20} />
                     </div>
-                 </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">{viewingJob.financial_risk} RISK LEVEL</p>
+                      <p className="text-xs font-bold leading-tight">{viewingJob.risk_message}</p>
+                    </div>
+                  </div>
+                </div>
 
-                 <div className="mt-10 pt-6 border-t border-[#F5F4F2] flex gap-3">
-                    <button className="flex-1 bg-[#1C2340] text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-[#E05C2A] transition-colors">
-                      Resume Applied
-                    </button>
-                    <button 
-                      onClick={() => { setActiveMock(viewingJob); setViewingJob(null); }}
-                      className="bg-[#E05C2A]/10 text-[#E05C2A] px-6 py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-[#E05C2A]/20 transition-all"
-                    >
-                      Mock Prep
-                    </button>
-                 </div>
+                <div className="mt-10 pt-6 border-t border-[#F5F4F2] flex gap-3">
+                  <button
+                    onClick={() => {
+                      if (!viewingJob.has_applied && appliedJobs.length < 5) {
+                        handleApply(viewingJob.job_id);
+                        setViewingJob(null);
+                      }
+                    }}
+                    disabled={viewingJob.has_applied || appliedJobs.length >= 5}
+                    className={`flex-1 py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all
+                        ${viewingJob.has_applied ? "bg-green-600 text-white" : appliedJobs.length >= 5 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-[#1C2340] text-white hover:bg-[#E05C2A]"}`}
+                  >
+                    {viewingJob.has_applied ? "Already Applied" : appliedJobs.length >= 5 ? "Application Limit Reached" : "Apply Now"}
+                  </button>
+                  <button
+                    onClick={() => { setActiveMock(viewingJob); setViewingJob(null); }}
+                    className="bg-[#E05C2A]/10 text-[#E05C2A] px-8 py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-[#E05C2A]/20 transition-all"
+                  >
+                    Capability Test
+                  </button>
+                </div>
                </div>
             </motion.div>
           </div>
@@ -498,9 +582,10 @@ const StudentFeed = ({ userId }) => {
                     onChange={e => setSortBy(e.target.value)} 
                     className="bg-transparent text-[11px] font-bold text-white border-none p-0 focus:ring-0 cursor-pointer w-full appearance-none"
                   >
-                    <option value="score" className="bg-[#1C2340] text-white">Top Matches</option>
-                    <option value="stipend_desc" className="bg-[#1C2340] text-white">Stipend: High</option>
-                    <option value="stipend_asc" className="bg-[#1C2340] text-white">Stipend: Low</option>
+                    <option value="score" className="bg-[#1C2340] text-white">Match: High to Low</option>
+                    <option value="score_asc" className="bg-[#1C2340] text-white">Match: Low to High</option>
+                    <option value="stipend_desc" className="bg-[#1C2340] text-white">Stipend: High to Low</option>
+                    <option value="stipend_asc" className="bg-[#1C2340] text-white">Stipend: Low to High</option>
                   </select>
                 </div>
                 
@@ -523,8 +608,10 @@ const StudentFeed = ({ userId }) => {
                 isAbsoluteTop={job.job_id === absoluteTopJobId}
                 isGolden={topGlobalIds.includes(job.job_id)}
                 isHighestStipend={job.stipend === Math.max(...matches.map(m=>m.stipend))}
+                isBestLocation={job.location.toLowerCase() === userLocation.toLowerCase()}
                 onApply={handleApply}
                 onOpenMock={setActiveMock}
+                onOpenDetails={setViewingJob}
                 canApply={appliedJobs.length < 5}
               />
             )) : (
@@ -606,13 +693,16 @@ const StudentFeed = ({ userId }) => {
                     className="group bg-[#FDFCFB] border border-[#E2E0DC] rounded-xl p-4 hover:border-[#E05C2A]/30 transition-all shadow-sm cursor-pointer"
                   >
                     <div className="flex justify-between items-start mb-2">
-                       <div>
-                         <h4 className="text-[10px] font-black text-[#1C2340] uppercase tracking-tight truncate pr-4">{job.role}</h4>
-                         <p className="text-[8px] font-black text-[#E05C2A] uppercase tracking-widest mt-0.5">{Math.round(job.score * 100)}% Match</p>
+                       <div className="flex-1 min-w-0">
+                         <h4 className="text-[10px] font-black text-[#1C2340] uppercase tracking-tight truncate pr-2">{job.role}</h4>
+                         <div className="flex items-center gap-2 mt-0.5">
+                           <span className="text-[8px] font-black text-[#E05C2A] uppercase tracking-widest">{Math.round(job.score * 100)}% Match</span>
+                           <span className="text-[8px] font-bold text-[#6B7280] uppercase opacity-40">• {job.location}</span>
+                         </div>
                        </div>
                        <button 
                         onClick={(e) => { e.stopPropagation(); handleUnapply(job.job_id); }}
-                        className="text-[#6B7280] hover:text-red-500 transition-colors p-1 -mt-1 -mr-1"
+                        className="text-[#6B7280] hover:text-red-500 transition-colors p-1 -mt-1 -mr-1 shrink-0"
                         title="Cancel Application"
                        >
                          <X size={12} />
@@ -652,7 +742,7 @@ const StudentFeed = ({ userId }) => {
           </div>
       </aside>
 
-      <ChatBot matches={matches} />
+      <ChatBot matches={matches} userSkills={userSkills} />
     </div>
   );
 };

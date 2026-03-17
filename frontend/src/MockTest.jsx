@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, ChevronRight, Play, Award, HelpCircle, Loader2, Sparkles, AlertCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
-const GROQ_API_KEY = atob('Z3NrX2o3Z2RPbEdueFpTT2tFcUM5ZG9XV0dyeWIzRllJb0VDNkJHajRpMGhYS1JzU0UycTExeGY=');
+import { insforge } from './lib/insforge';
 
 const MockTest = ({ job, onComplete }) => {
   const [questions, setQuestions] = useState([]);
@@ -12,53 +12,37 @@ const MockTest = ({ job, onComplete }) => {
   const [score, setScore] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedIdx, setSelectedIdx] = useState(null);
+  const [isStepFeedback, setIsStepFeedback] = useState(false);
 
   useEffect(() => {
     const fetchAIQuestions = async () => {
-      if (GROQ_API_KEY === "none" || GROQ_API_KEY.includes("PLEASE_PASTE")) {
-        // Fallback dummy questions
-        setQuestions([
-          { q: `What is the most critical technical skill for a ${job.role}?`, a: ["Manual Testing", "API Design", "Architecture Planning", "Soft Skills"], correct: 2 },
-          { q: `How does ${job.company} typically handle project scalability?`, a: ["Vertical Scaling", "Horizontal Scaling", "No Scaling", "Manual Reboots"], correct: 1 },
-          { q: "Which tool is essential for modern cloud infrastructure?", a: ["Terraform", "Excel", "MS Paint", "FTP"], correct: 0 }
-        ]);
-        setIsLoading(false);
-        return;
-      }
-
       try {
-        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${GROQ_API_KEY}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            model: "llama-3.3-70b-versatile",
-            messages: [
-              {
-                role: "system",
-                content: "You are an expert interviewer. Generate exactly 20 high-quality multiple-choice questions for a student applying for a specific internship role. The questions should cover technical, situational, and behavioral aspects. Return ONLY a valid JSON object with a key 'questions' containing an array of 20 objects with keys: 'q' (question), 'a' (array of 4 options), 'correct' (index of correct answer 0-3)."
-              },
-              {
-                role: "user",
-                content: `Role: ${job.role}, Company: ${job.company}. Focus on practical technical skills, role-specific scenarios, and cultural fit. Ensure questions are diverse and challenging.`
-              }
-            ],
-            temperature: 0.8,
-            response_format: { type: "json_object" }
-          })
+        const response = await insforge.ai.chat.completions.create({
+          model: "openai/gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: "You are an expert interviewer. Generate exactly 20 high-quality multiple-choice questions for a student applying for a specific internship role. The questions should cover technical, situational, and behavioral aspects. Return ONLY a valid JSON object with a key 'questions' containing an array of 20 objects with keys: 'q' (question), 'a' (array of 4 options), 'correct' (index of correct answer 0-3)."
+            },
+            {
+              role: "user",
+              content: `Role: ${job.role}, Company: ${job.company}. Focus on practical technical skills, role-specific scenarios, and cultural fit. Ensure questions are diverse and challenging.`
+            }
+          ],
+          temperature: 0.8
         });
 
-        if (!response.ok) throw new Error("API Request Failed");
+        if (!response || !response.choices || !response.choices[0]) {
+          throw new Error("API Request Failed");
+        }
 
-        const data = await response.json();
         let content;
+        const rawContent = response.choices[0].message.content;
         try {
-          content = JSON.parse(data.choices[0].message.content);
+          content = JSON.parse(rawContent);
         } catch (parseError) {
-          // Robust parsing in case of markdown blocks
-          const match = data.choices[0].message.content.match(/\{[\s\S]*\}/);
+          const match = rawContent.match(/\{[\s\S]*\}/);
           if (match) content = JSON.parse(match[0]);
           else throw new Error("JSON Parsing Failed");
         }
@@ -89,7 +73,17 @@ const MockTest = ({ job, onComplete }) => {
   }, [job]);
 
   const handleAnswer = (idx) => {
-    if (idx === questions[currentStep].correct) setScore(score + 1);
+    if (isStepFeedback) return;
+    setSelectedIdx(idx);
+    setIsStepFeedback(true);
+    if (idx === questions[currentStep].correct) {
+      setScore(s => s + 1);
+    }
+  };
+
+  const goToNextStep = () => {
+    setSelectedIdx(null);
+    setIsStepFeedback(false);
     if (currentStep < questions.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -121,7 +115,9 @@ const MockTest = ({ job, onComplete }) => {
         </div>
         <h3 className="text-2xl font-heading font-black text-[#1C2340] mb-3">Assessment Complete</h3>
         <p className="text-sm text-[#6B7280] mb-10 font-medium leading-relaxed max-w-xs mx-auto">
-          Result: <span className="text-[#1C2340] font-black">{Math.round((score/questions.length)*100)}%</span> accuracy achieved in the {job.role} cluster.
+          Final Score: <span className="text-[#1C2340] font-black">{score} / {questions.length}</span>
+          <br />
+          Accuracy: <span className="text-[#E05C2A] font-black">{Math.round((score/questions.length)*100)}%</span>
         </p>
         <button 
           onClick={onComplete} 
@@ -166,23 +162,50 @@ const MockTest = ({ job, onComplete }) => {
         </div>
 
         <div className="grid grid-cols-1 gap-3">
-          {questions[currentStep].a.map((ans, i) => (
-            <button
-              key={i}
-              onClick={() => handleAnswer(i)}
-              className="w-full text-left p-4 rounded-xl border border-[#E2E0DC] bg-white hover:border-[#E05C2A] hover:shadow-md hover:shadow-[#E05C2A]/5 transition-all group relative overflow-hidden"
-            >
-              <div className="flex items-center gap-4 relative z-10">
-                <span className="w-6 h-6 rounded-md bg-[#F5F4F2] flex items-center justify-center text-[10px] font-black text-[#6B7280] group-hover:bg-[#E05C2A] group-hover:text-white transition-colors">
-                  {String.fromCharCode(65 + i)}
-                </span>
-                <div className="text-sm font-bold text-[#1C2340] markdown-content-mini">
-                  <ReactMarkdown>{ans}</ReactMarkdown>
+          {questions[currentStep].a.map((ans, i) => {
+            const isCorrect = i === questions[currentStep].correct;
+            const isSelected = i === selectedIdx;
+            
+            let btnClass = "border-[#E2E0DC] bg-white";
+            if (isStepFeedback) {
+              if (isCorrect) btnClass = "border-green-500 bg-green-50";
+              else if (isSelected) btnClass = "border-red-500 bg-red-50";
+              else btnClass = "border-[#E2E0DC] bg-white opacity-50";
+            }
+
+            return (
+              <button
+                key={i}
+                onClick={() => handleAnswer(i)}
+                disabled={isStepFeedback}
+                className={`w-full text-left p-4 rounded-xl border transition-all group relative overflow-hidden ${btnClass}`}
+              >
+                <div className="flex items-center gap-4 relative z-10">
+                  <span className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-black transition-colors
+                    ${isStepFeedback && isCorrect ? 'bg-green-600 text-white' : 
+                      isStepFeedback && isSelected ? 'bg-red-600 text-white' : 
+                      'bg-[#F5F4F2] text-[#6B7280] group-hover:bg-[#E05C2A] group-hover:text-white'}`}>
+                    {String.fromCharCode(65 + i)}
+                  </span>
+                  <div className="text-sm font-bold text-[#1C2340] markdown-content-mini">
+                    <ReactMarkdown>{ans}</ReactMarkdown>
+                  </div>
                 </div>
-              </div>
-            </button>
-          ))}
+              </button>
+            );
+          })}
         </div>
+        
+        {isStepFeedback && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-8">
+            <button 
+              onClick={goToNextStep}
+              className="w-full bg-[#E05C2A] text-white py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2"
+            >
+              {currentStep < questions.length - 1 ? "Next Question" : "View Final Results"} <ChevronRight size={16} />
+            </button>
+          </motion.div>
+        )}
       </div>
     </div>
   );
